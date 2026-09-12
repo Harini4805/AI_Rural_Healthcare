@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import Layout from '../Layout';
 import api from '../../services/api';
 import RiskMap from './RiskMap';
 import RiskTable from './RiskTable';
