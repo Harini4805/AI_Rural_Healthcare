@@ -6,11 +6,12 @@ import type { VillageRisk } from './RiskDashboard';
 
 interface VillageDetailProps {
   village: VillageRisk;
+  districtId: number;
   onClose: () => void;
 }
 
 
-export default function VillageDetail({ village, onClose }: VillageDetailProps) {
+export default function VillageDetail({ village, districtId, onClose }: VillageDetailProps) {
   const [forecast, setForecast] = useState<any[]>([]);
   const [forecastStatus, setForecastStatus] = useState<string>('loading');
   const [clusterMates, setClusterMates] = useState<any[]>([]);
@@ -49,7 +50,7 @@ export default function VillageDetail({ village, onClose }: VillageDetailProps) 
         const myCluster = cmap[village.village_id];
         
         // Let's fetch all villages to match names (inefficient but okay for MVP demo)
-        api.get('/districts/1/ranking').then(rankRes => {
+        api.get(`/districts/${districtId}/ranking`).then(rankRes => {
            const allV = rankRes.data.villages;
            const mates = allV.filter((v: any) => 
               cmap[v.village_id] === myCluster && v.village_id !== village.village_id

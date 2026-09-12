@@ -3,6 +3,7 @@ import api from '../../services/api';
 import RiskMap from './RiskMap';
 import RiskTable from './RiskTable';
 import VillageDetail from './VillageDetail';
+import FieldRequestsFeed from './FieldRequestsFeed';
 import DistrictAnalytics from './DistrictAnalytics';
 import AllocationPlanner from './AllocationPlanner';
 import { AlertCircle, X } from 'lucide-react';
@@ -19,6 +20,7 @@ export interface VillageRisk {
   longitude: number | null;
   population: number;
   composite_score: number;
+  active_incident?: boolean;
   dominant_driver: string;
   recommendation: string;
   rank: number;
@@ -145,26 +147,32 @@ export default function RiskDashboard() {
       {loading && <div className="spinner" style={{ marginTop: '2rem' }} />}
       
       {!loading && ranking && (
-        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginTop: '1.5rem' }}>
-          {/* Left Column: Map & Table */}
-          <div style={{ flex: '1 1 50%', minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div className="glass" style={{ padding: '1rem', height: '400px' }}>
-               <RiskMap villages={ranking.villages} selectedId={selectedVillageId} onSelect={setSelectedVillageId} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.5rem' }}>
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+            {/* Left Column: Map & Table */}
+            <div style={{ flex: '1 1 50%', minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="glass" style={{ padding: '1rem', height: '400px' }}>
+                 <RiskMap villages={ranking.villages} selectedId={selectedVillageId} onSelect={setSelectedVillageId} />
+              </div>
+              <div className="glass" style={{ padding: '1rem' }}>
+                 <RiskTable villages={ranking.villages} selectedId={selectedVillageId} onSelect={setSelectedVillageId} />
+              </div>
             </div>
-            <div className="glass" style={{ padding: '1rem' }}>
-               <RiskTable villages={ranking.villages} selectedId={selectedVillageId} onSelect={setSelectedVillageId} />
+
+            {/* Right Column: Detail Panel, Analytics, or Planner */}
+            <div style={{ flex: '1 1 40%', minWidth: '350px' }}>
+              {activeVillage ? (
+                <VillageDetail village={activeVillage} districtId={selectedDistrictId!} onClose={() => setSelectedVillageId(null)} />
+              ) : (
+                activeTab === 'analytics' 
+                  ? <DistrictAnalytics ranking={ranking} />
+                  : <AllocationPlanner districtId={selectedDistrictId!} />
+              )}
             </div>
           </div>
-
-          {/* Right Column: Detail Panel, Analytics, or Planner */}
-          <div style={{ flex: '1 1 40%', minWidth: '350px' }}>
-            {activeVillage ? (
-              <VillageDetail village={activeVillage} onClose={() => setSelectedVillageId(null)} />
-            ) : (
-              activeTab === 'analytics' 
-                ? <DistrictAnalytics ranking={ranking} />
-                : <AllocationPlanner districtId={selectedDistrictId!} />
-            )}
+          
+          <div>
+            <FieldRequestsFeed />
           </div>
         </div>
       )}

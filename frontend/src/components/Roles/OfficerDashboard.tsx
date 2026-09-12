@@ -4,6 +4,7 @@ import api from '../../services/api';
 import RiskMap from '../RiskAnalysis/RiskMap';
 import RiskTable from '../RiskAnalysis/RiskTable';
 import VillageDetail from '../RiskAnalysis/VillageDetail';
+import FieldRequestsFeed from '../RiskAnalysis/FieldRequestsFeed';
 import type { RankingResponse, District } from '../RiskAnalysis/RiskDashboard';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { Home, ShieldAlert, Users, Activity } from 'lucide-react';
@@ -188,7 +189,7 @@ export default function OfficerDashboard() {
               </div>
               <div style={{ flex: 1 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={barData} margin={{ top: 20, right: 10, left: -20, bottom: 40 }}>
+                  <BarChart data={barData} margin={{ top: 20, right: 10, left: -20, bottom: 60 }}>
                     <defs>
                       <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
@@ -226,7 +227,7 @@ export default function OfficerDashboard() {
               <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: 600 }}>Resource Readiness (%)</h3>
               <div style={{ flex: 1 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={resourceData} margin={{ top: 20, right: 10, left: -20, bottom: 40 }}>
+                  <BarChart data={resourceData} margin={{ top: 20, right: 10, left: -20, bottom: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                     <XAxis 
                       dataKey="name" 
@@ -246,7 +247,7 @@ export default function OfficerDashboard() {
                       contentStyle={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff', fontSize: '0.85rem' }} 
                       cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                     />
-                    <Legend wrapperStyle={{ fontSize: '12px' }} iconType="circle" />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} iconType="circle" />
                     <Bar dataKey="medicine" fill="var(--emerald)" radius={[4, 4, 0, 0]} maxBarSize={20} name="Medicine Stock" />
                     <Bar dataKey="staffing" fill="var(--indigo)" radius={[4, 4, 0, 0]} maxBarSize={20} name="Staffing Fill" />
                   </BarChart>
@@ -299,7 +300,7 @@ export default function OfficerDashboard() {
 
             <div style={{ flex: '1 1 40%', minWidth: '350px' }}>
               {activeVillage ? (
-                <VillageDetail village={activeVillage} onClose={() => setSelectedVillageId(null)} />
+                <VillageDetail village={activeVillage} districtId={districtId} onClose={() => setSelectedVillageId(null)} />
               ) : (
                 <div className="glass" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', borderRadius: '12px' }}>
                   <h3>Select a village</h3>
@@ -307,6 +308,10 @@ export default function OfficerDashboard() {
                 </div>
               )}
             </div>
+          </div>
+          
+          <div style={{ marginTop: '1.5rem' }}>
+            <FieldRequestsFeed />
           </div>
         </div>
       )}

@@ -15,7 +15,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from backend.database import get_db
-from backend.models import Village, HealthRecord, VillageResource, District
+from backend.models import District, Village, HealthRecord, VillageResource, IncidentReport
 from backend.dependencies import get_current_user
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -164,6 +164,18 @@ def get_village_risk_score(village_id: int, db: Session = Depends(get_db)):
     res = db.query(VillageResource).filter(VillageResource.village_id == village_id).first()
 
     result = _compute_risk(records, res)
+    
+    # Incident Override Logic
+    active_inc = db.query(IncidentReport).filter(
+        IncidentReport.village_id == village_id,
+        IncidentReport.status == "open",
+        IncidentReport.severity.in_(["high", "critical"])
+    ).first()
+    
+    result["active_incident"] = bool(active_inc)
+    if active_inc:
+        result["composite_score"] = max(result["composite_score"], 95.0)
+        
     result["recommendation"] = _recommendation(result["dominant_driver"], res)
     result["village_id"] = village_id
     result["village_name"] = village.name
@@ -192,6 +204,19 @@ def get_district_ranking(district_id: int, db: Session = Depends(get_db)):
         )
         res = db.query(VillageResource).filter(VillageResource.village_id == v.id).first()
         risk = _compute_risk(records, res)
+        
+        # Incident Override Logic
+        active_inc = db.query(IncidentReport).filter(
+            IncidentReport.village_id == v.id,
+            IncidentReport.status == "open",
+            IncidentReport.severity.in_(["high", "critical"])
+        ).first()
+        
+        active_incident = bool(active_inc)
+        composite_score = risk["composite_score"]
+        if active_inc:
+            composite_score = max(composite_score, 95.0)
+            
         ranking.append(
             {
                 "village_id": v.id,
@@ -199,7 +224,8 @@ def get_district_ranking(district_id: int, db: Session = Depends(get_db)):
                 "latitude": v.latitude,
                 "longitude": v.longitude,
                 "population": v.population,
-                "composite_score": risk["composite_score"],
+                "composite_score": composite_score,
+                "active_incident": active_incident,
                 "dominant_driver": risk["dominant_driver"],
                 "factors": risk["factors"],
                 "recommendation": _recommendation(risk["dominant_driver"], res),

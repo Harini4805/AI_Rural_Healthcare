@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, MapPin, Plus, ShieldAlert, Send } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, MapPin, Plus, ShieldAlert, Send, X, Pill, Flame } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import Layout from '../Layout';
 import api from '../../services/api';
@@ -12,6 +12,15 @@ export default function FieldWorkerDashboard() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [resolvingId, setResolvingId] = useState<number | null>(null);
   
+  // Modal state
+  const [showIncidentModal, setShowIncidentModal] = useState(false);
+  const [showMedicineModal, setShowMedicineModal] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  
+  const [incidentForm, setIncidentForm] = useState({ type: 'disease_outbreak', severity: 'high', description: '' });
+  const [medicineForm, setMedicineForm] = useState({ name: '', quantity: 10, urgency: 'high', notes: '' });
+
   const districtId = 1; // MVP Hardcode
 
   useEffect(() => {
@@ -58,6 +67,55 @@ export default function FieldWorkerDashboard() {
     ];
   };
 
+  const submitIncident = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tasks.length) return;
+    setSubmitting(true);
+    try {
+      await api.post('/incident-reports', {
+        village_id: tasks[0].village_id, // Default to top priority village
+        incident_type: incidentForm.type,
+        severity: incidentForm.severity,
+        description: incidentForm.description
+      });
+      setSubmitStatus('Reported — village flagged');
+      setTimeout(() => {
+        setSubmitStatus(null);
+        setShowIncidentModal(false);
+        setIncidentForm({ type: 'disease_outbreak', severity: 'high', description: '' });
+      }, 2500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const submitMedicine = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tasks.length) return;
+    setSubmitting(true);
+    try {
+      await api.post('/medicine-requests', {
+        village_id: tasks[0].village_id,
+        medicine_name: medicineForm.name,
+        quantity_needed: Number(medicineForm.quantity),
+        urgency: medicineForm.urgency,
+        notes: medicineForm.notes
+      });
+      setSubmitStatus('Medicine Requested');
+      setTimeout(() => {
+        setSubmitStatus(null);
+        setShowMedicineModal(false);
+        setMedicineForm({ name: '', quantity: 10, urgency: 'high', notes: '' });
+      }, 2500);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const progressData = [
     { name: 'Completed', value: 12, fill: '#10b981' }, // emerald
     { name: 'Pending', value: tasks.length, fill: '#6366f1' } // indigo
@@ -83,6 +141,18 @@ export default function FieldWorkerDashboard() {
                 Action Required
               </span>
             )}
+          </div>
+
+          {/* Quick Actions */}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+            <button 
+              className="btn btn-primary" 
+              style={{ flex: 1, padding: '0.75rem', display: 'flex', justifyContent: 'center', gap: '0.5rem', background: 'var(--emerald)', border: 'none' }}
+              onClick={() => setShowMedicineModal(true)}
+            >
+              <Pill size={18} />
+              Request Medicine
+            </button>
           </div>
 
           {/* Weekly Progress Donut Chart */}
@@ -249,6 +319,8 @@ export default function FieldWorkerDashboard() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => setShowIncidentModal(true)}
+            title="Report Incident"
             style={{
               position: 'fixed',
               bottom: '2rem',
@@ -272,6 +344,109 @@ export default function FieldWorkerDashboard() {
 
         </div>
       )}
+
+      {/* Incident Modal */}
+      <AnimatePresence>
+        {showIncidentModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="glass" style={{ width: '100%', maxWidth: '400px', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--rose)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Flame color="var(--rose)" size={20} /> Report Incident
+                </h3>
+                <button onClick={() => setShowIncidentModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
+              </div>
+
+              {submitStatus ? (
+                <div style={{ padding: '2rem', textAlign: 'center' }}>
+                  <CheckCircle2 color="var(--emerald)" size={48} style={{ margin: '0 auto 1rem' }} />
+                  <h4 style={{ color: 'var(--emerald)' }}>{submitStatus}</h4>
+                </div>
+              ) : (
+                <form onSubmit={submitIncident} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Incident Type</label>
+                    <select className="form-select" value={incidentForm.type} onChange={(e) => setIncidentForm({...incidentForm, type: e.target.value})} required>
+                      <option value="disease_outbreak">Disease Outbreak</option>
+                      <option value="injury">Mass Injury</option>
+                      <option value="environmental">Environmental / Weather</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Severity</label>
+                    <select className="form-select" value={incidentForm.severity} onChange={(e) => setIncidentForm({...incidentForm, severity: e.target.value})} required>
+                      <option value="critical">Critical</option>
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Description</label>
+                    <textarea className="form-input" rows={3} value={incidentForm.description} onChange={(e) => setIncidentForm({...incidentForm, description: e.target.value})} required placeholder="Briefly describe the situation..."></textarea>
+                  </div>
+                  <button type="submit" disabled={submitting || tasks.length === 0} className="btn btn-primary" style={{ background: 'var(--rose)', border: 'none', marginTop: '0.5rem' }}>
+                    {submitting ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Medicine Modal */}
+      <AnimatePresence>
+        {showMedicineModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="glass" style={{ width: '100%', maxWidth: '400px', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--emerald)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Pill color="var(--emerald)" size={20} /> Request Medicine
+                </h3>
+                <button onClick={() => setShowMedicineModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
+              </div>
+
+              {submitStatus ? (
+                <div style={{ padding: '2rem', textAlign: 'center' }}>
+                  <CheckCircle2 color="var(--emerald)" size={48} style={{ margin: '0 auto 1rem' }} />
+                  <h4 style={{ color: 'var(--emerald)' }}>{submitStatus}</h4>
+                </div>
+              ) : (
+                <form onSubmit={submitMedicine} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Medicine Name</label>
+                    <input type="text" className="form-input" value={medicineForm.name} onChange={(e) => setMedicineForm({...medicineForm, name: e.target.value})} required placeholder="e.g. Paracetamol, ORS" />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Quantity</label>
+                      <input type="number" min="1" className="form-input" value={medicineForm.quantity} onChange={(e) => setMedicineForm({...medicineForm, quantity: Number(e.target.value)})} required />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Urgency</label>
+                      <select className="form-select" value={medicineForm.urgency} onChange={(e) => setMedicineForm({...medicineForm, urgency: e.target.value})} required>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Notes (Optional)</label>
+                    <input type="text" className="form-input" value={medicineForm.notes} onChange={(e) => setMedicineForm({...medicineForm, notes: e.target.value})} placeholder="Reason for request" />
+                  </div>
+                  <button type="submit" disabled={submitting || tasks.length === 0} className="btn btn-primary" style={{ background: 'var(--emerald)', border: 'none', marginTop: '0.5rem' }}>
+                    {submitting ? 'Submitting...' : 'Submit Request'}
+                  </button>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </Layout>
   );
 }
