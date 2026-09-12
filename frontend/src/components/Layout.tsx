@@ -13,26 +13,24 @@ export default function Layout({ children, title, actions }: Props) {
   const location = useLocation();
 
   const navItems = [];
-  if (role === 'admin') {
+  if (role === 'Admin') {
     navItems.push(
-      { to: '/risk-analysis', icon: '🗺️', label: 'Risk Analysis' },
+      { to: '/dashboard/admin', icon: '🗺️', label: 'Admin Overview' },
       { to: '/districts', icon: '🏛️', label: 'Districts' },
       { to: '/villages', icon: '🏘️', label: 'Villages' },
       { to: '/health-records', icon: '🩺', label: 'Health Records' },
       { to: '/patterns', icon: '🔬', label: 'Predictive Patterns' }
     );
-  } else if (role === 'coordinator') {
+  } else if (role === 'District Health Officer') {
     navItems.push(
-      { to: '/coordinator', icon: '📍', label: 'Operations Dashboard' },
+      { to: '/dashboard/officer', icon: '📍', label: 'District Operations' },
       { to: '/villages', icon: '🏘️', label: 'Villages' }
     );
-  } else if (role === 'worker') {
+  } else if (role === 'Field Health Worker') {
     navItems.push(
-      { to: '/tasks', icon: '✅', label: 'Field Tasks' },
-      { to: '/submit-feedback', icon: '📝', label: 'Submit Feedback' }
+      { to: '/dashboard/field', icon: '✅', label: 'Field Tasks' }
     );
   } else {
-    // Fallback if role is missing
     navItems.push({ to: '/', icon: '📊', label: 'Dashboard', exact: true });
   }
 

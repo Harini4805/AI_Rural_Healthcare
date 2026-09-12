@@ -83,7 +83,7 @@ export default function VillageDetail({ village, onClose }: VillageDetailProps) 
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(val: number) => val.toFixed(1)} />
+                <Tooltip formatter={(val: any) => val.toFixed(1)} />
               </PieChart>
             </ResponsiveContainer>
           </div>

@@ -2,7 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/AuthProvider';
 import { useAuth } from './hooks/useAuth';
 import Login from './components/Auth/Login';
-import Overview from './components/Dashboard/Overview';
+import AdminDashboard from './components/Roles/AdminDashboard';
+import OfficerDashboard from './components/Roles/OfficerDashboard';
+import FieldWorkerDashboard from './components/Roles/FieldWorkerDashboard';
 import DistrictList from './components/Districts/DistrictList';
 import DistrictForm from './components/Districts/DistrictForm';
 import VillageList from './components/Villages/VillageList';
@@ -10,12 +12,8 @@ import VillageForm from './components/Villages/VillageForm';
 import RecordList from './components/HealthRecords/RecordList';
 import RecordForm from './components/HealthRecords/RecordForm';
 import PatternList from './components/PredictivePatterns/PatternList';
-import RiskDashboard from './components/RiskAnalysis/RiskDashboard';
 import './App.css';
 import type { ReactElement } from 'react';
-
-import CoordinatorDashboard from './components/Roles/CoordinatorDashboard';
-import FieldWorkerTasks from './components/Roles/FieldWorkerTasks';
 
 function Protected({ children }: { children: ReactElement }) {
   const { isAuthenticated } = useAuth();
@@ -24,15 +22,15 @@ function Protected({ children }: { children: ReactElement }) {
 
 function RoleDefaultRoute() {
   const { role } = useAuth();
-  if (role === 'admin') return <Navigate to="/risk-analysis" replace />;
-  if (role === 'coordinator') return <Navigate to="/coordinator" replace />;
-  if (role === 'worker') return <Navigate to="/tasks" replace />;
+  if (role === 'Admin') return <Navigate to="/dashboard/admin" replace />;
+  if (role === 'District Health Officer') return <Navigate to="/dashboard/officer" replace />;
+  if (role === 'Field Health Worker') return <Navigate to="/dashboard/field" replace />;
   return <Navigate to="/login" replace />;
 }
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -44,24 +42,32 @@ function App() {
               </Protected>
             }
           />
-          {/* Coordinator */}
+          {/* Dashboards */}
           <Route
-            path="/coordinator"
+            path="/dashboard/admin"
             element={
               <Protected>
-                <CoordinatorDashboard />
+                <AdminDashboard />
               </Protected>
             }
           />
-          {/* Worker */}
           <Route
-            path="/tasks"
+            path="/dashboard/officer"
             element={
               <Protected>
-                <FieldWorkerTasks />
+                <OfficerDashboard />
               </Protected>
             }
           />
+          <Route
+            path="/dashboard/field"
+            element={
+              <Protected>
+                <FieldWorkerDashboard />
+              </Protected>
+            }
+          />
+
           {/* Districts */}
           <Route
             path="/districts"
@@ -146,15 +152,7 @@ function App() {
               </Protected>
             }
           />
-          {/* Risk Analysis */}
-          <Route
-            path="/risk-analysis"
-            element={
-              <Protected>
-                <RiskDashboard />
-              </Protected>
-            }
-          />
+          
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

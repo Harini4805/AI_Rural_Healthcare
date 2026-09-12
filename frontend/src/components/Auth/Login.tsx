@@ -3,36 +3,24 @@ import { useAuth } from '../../hooks/useAuth';
 
 export default function Login() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@healthnet.com');
+  const [password, setPassword] = useState('Admin@123');
+  const [selectedRole, setSelectedRole] = useState('District Health Officer');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  // Preset users for easy access (dev purposes only, hidden in production normally)
-  const presets = [
-    { label: 'Admin', email: 'admin@healthnet.com', password: 'Admin@123' },
-    { label: 'Doctor', email: 'doctor@healthnet.com', password: 'Doctor@456' },
-    { label: 'Field Worker', email: 'worker@healthnet.com', password: 'Worker@789' },
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email, password, selectedRole);
     } catch {
       setError('Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const fillPreset = (p: { email: string; password: string }) => {
-    setEmail(p.email);
-    setPassword(p.password);
-    setError('');
   };
 
   return (
@@ -59,28 +47,40 @@ export default function Login() {
           <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
             Login
           </h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             Log in to your account
           </p>
 
-          {/* Quick-login presets (can be removed later) */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-            {presets.map((p) => (
-              <button
-                key={p.label}
-                className="btn btn-secondary btn-sm"
-                style={{ flex: 1, padding: '0.25rem', fontSize: '0.75rem' }}
-                onClick={() => fillPreset(p)}
-                type="button"
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-
-          {error && <div className="alert alert-error" style={{ marginBottom: '1rem' }}>{error}</div>}
-
           <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="form-label">Log in as:</label>
+              <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                {['Admin', 'District Health Officer', 'Field Health Worker'].map(role => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setSelectedRole(role)}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      fontSize: '0.75rem',
+                      fontWeight: selectedRole === role ? 600 : 400,
+                      color: selectedRole === role ? 'var(--bg-card)' : 'var(--text-secondary)',
+                      background: selectedRole === role ? 'var(--cyan)' : 'transparent',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {role}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {error && <div className="alert alert-error" style={{ marginBottom: '1rem' }}>{error}</div>}
+
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label" htmlFor="email">Email</label>
               <input
