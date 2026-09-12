@@ -1,0 +1,94 @@
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from datetime import datetime
+
+Base = declarative_base()
+
+
+class District(Base):
+    """District health administrative unit"""
+    __tablename__ = "districts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False, index=True)
+    code = Column(String(20), unique=True, nullable=False)
+    population = Column(Integer)
+    area_sq_km = Column(Float)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    villages = relationship("Village", back_populates="district", cascade="all, delete-orphan")
+    health_records = relationship("HealthRecord", back_populates="district")
+
+
+class Village(Base):
+    """Village cluster within a district"""
+    __tablename__ = "villages"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False, index=True)
+    code = Column(String(20), unique=True, nullable=False)
+    district_id = Column(Integer, ForeignKey("districts.id"), nullable=False)
+    population = Column(Integer)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    district = relationship("District", back_populates="villages")
+    health_records = relationship("HealthRecord", back_populates="village")
+
+
+class HealthRecord(Base):
+    """Health observation and intervention records"""
+    __tablename__ = "health_records"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    district_id = Column(Integer, ForeignKey("districts.id"), nullable=False)
+    village_id = Column(Integer, ForeignKey("villages.id"), nullable=False)
+    
+    # Disease information
+    disease_type = Column(String(100), nullable=False, index=True)
+    case_count = Column(Integer, default=0)
+    severity_level = Column(String(20))  # low, medium, high, critical
+    
+    # Intervention details
+    intervention_type = Column(String(100))
+    intervention_date = Column(DateTime)
+    intervention_notes = Column(Text)
+    
+    # Outcomes
+    outcome_status = Column(String(50))  # pending, successful, partial, failed
+    outcome_notes = Column(Text)
+    
+    # Metadata
+    recorded_by = Column(String(100))  # Field health worker
+    recorded_at = Column(DateTime, default=datetime.utcnow)
+    verified = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    district = relationship("District", back_populates="health_records")
+    village = relationship("Village", back_populates="health_records")
+
+
+class PredictivePattern(Base):
+    """Disease prevention patterns learned from data"""
+    __tablename__ = "predictive_patterns"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    disease_type = Column(String(100), nullable=False, index=True)
+    pattern_description = Column(Text)
+    confidence_score = Column(Float)  # 0.0 to 1.0
+    
+    # Pattern metadata
+    data_points_used = Column(Integer)
+    last_updated = Column(DateTime, default=datetime.utcnow)
+    active = Column(Boolean, default=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
