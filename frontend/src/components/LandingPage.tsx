@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShieldAlert, TrendingUp, BellRing, GitBranch, Settings, LayoutDashboard } from 'lucide-react';
+import { ShieldAlert, TrendingUp, BellRing, GitBranch, Settings, LayoutDashboard, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LandingPage() {
@@ -8,27 +8,28 @@ export default function LandingPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-body)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)' }}>
       {/* 1. NAVBAR */}
       <nav style={{ 
         position: 'sticky', 
         top: 0, 
         zIndex: 100, 
-        background: 'rgba(15, 23, 42, 0.8)', 
+        background: 'rgba(255, 255, 255, 0.8)', 
         backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        borderBottom: '1px solid var(--border)',
         padding: '1rem 2rem'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '1.5rem' }}>🌿</span>
+            <div style={{ background: 'var(--indigo)', borderRadius: '8px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+              <Activity size={18} />
+            </div>
             <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
               Health Intel Network
             </span>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }} className="nav-links">
-            {/* Hide on very small screens, let CSS handle it ideally, but inline style here for simplicity: only show Login on mobile */}
             <a href="#features" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.2s' }} className="hide-on-mobile">Features</a>
             <a href="#how-it-works" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.2s' }} className="hide-on-mobile">How It Works</a>
             <Link to="/login" className="btn btn-primary" style={{ padding: '0.5rem 1.25rem', textDecoration: 'none' }}>
@@ -70,7 +71,7 @@ export default function LandingPage() {
               <Link to="/login" className="btn btn-primary" style={{ padding: '0.875rem 2rem', fontSize: '1.1rem', textDecoration: 'none' }}>
                 View Dashboard
               </Link>
-              <button onClick={scrollToFeatures} className="btn" style={{ padding: '0.875rem 2rem', fontSize: '1.1rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'var(--text-primary)', cursor: 'pointer' }}>
+              <button onClick={scrollToFeatures} className="btn" style={{ padding: '0.875rem 2rem', fontSize: '1.1rem', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', cursor: 'pointer' }}>
                 See How It Works
               </button>
             </div>
@@ -80,28 +81,21 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="glass" 
             style={{ 
-              height: '400px', 
               borderRadius: '16px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'linear-gradient(145deg, rgba(15,23,42,0.6) 0%, rgba(30,41,59,0.4) 100%)',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+              overflow: 'hidden',
+              boxShadow: 'var(--shadow-lg)',
+              border: '1px solid var(--border)',
+              lineHeight: 0
             }}
           >
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-              <LayoutDashboard size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-              <div style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '2px' }}>Dashboard Interface</div>
-            </div>
+            <img src="/dashboard-mockup.jpg" alt="Health Intel Network Dashboard" style={{ width: '100%', height: 'auto', display: 'block' }} />
           </motion.div>
         </div>
       </section>
 
       {/* 3. PROBLEM SECTION */}
-      <section style={{ padding: '4rem 2rem', background: 'rgba(0,0,0,0.2)' }}>
+      <section style={{ padding: '4rem 2rem', background: 'var(--bg-secondary)' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1.5rem' }}>The Challenge in Rural Healthcare</h2>
           <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 }}>
@@ -173,7 +167,7 @@ export default function LandingPage() {
       </section>
 
       {/* 5. WHO IT'S FOR */}
-      <section id="how-it-works" style={{ padding: '6rem 2rem', background: 'rgba(0,0,0,0.2)' }}>
+      <section id="how-it-works" style={{ padding: '6rem 2rem', background: 'var(--bg-secondary)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
             <h2 style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 1rem 0' }}>Who It's For</h2>
@@ -216,11 +210,16 @@ export default function LandingPage() {
       </section>
 
       {/* 7. FOOTER */}
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '3rem 2rem 2rem', marginTop: 'auto' }}>
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '3rem 2rem 2rem', marginTop: 'auto', background: 'var(--bg-card)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-              🌿 Health Intel Network
+          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+               <div style={{ background: 'var(--indigo)', borderRadius: '8px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                 <Activity size={14} />
+               </div>
+               <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                 Health Intel Network
+               </div>
             </div>
             <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               Predictive Care for Every Village.
