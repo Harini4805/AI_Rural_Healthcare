@@ -21,14 +21,6 @@ function Protected({ children }: { children: ReactElement }) {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
-function RoleDefaultRoute() {
-  const { role } = useAuth();
-  if (role === 'Admin') return <Navigate to="/dashboard/admin" replace />;
-  if (role === 'District Health Officer') return <Navigate to="/dashboard/officer" replace />;
-  if (role === 'Field Health Worker') return <Navigate to="/dashboard/field" replace />;
-  return <Navigate to="/login" replace />;
-}
-
 function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
