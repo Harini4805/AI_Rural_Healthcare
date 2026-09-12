@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, MapPin, Plus, ShieldAlert, Send, X, Pill, Flame } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, MapPin, Plus, ShieldAlert, Send, X, Pill, Flame, Camera, Activity, FileText, AlertCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import Layout from '../Layout';
 import api from '../../services/api';
@@ -272,13 +272,44 @@ export default function FieldWorkerDashboard() {
                             </div>
 
                             {/* ML Feedback Loop Form */}
-                            <div style={{ marginBottom: '1.5rem' }}>
-                              <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Log Field Observation</h4>
-                              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <input type="text" placeholder="e.g. 5 new cases found today..." className="form-input" style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }} />
-                                <button className="btn btn-primary" style={{ padding: '0.5rem 0.75rem' }} title="Submit Feedback for ML tuning">
-                                  <Send size={16} />
-                                </button>
+                            <div style={{ marginBottom: '1.5rem', background: 'var(--bg-primary)', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                                <Activity size={18} color="var(--indigo)" />
+                                <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: 600 }}>Log Field Observation</h4>
+                              </div>
+                              <p style={{ margin: '0 0 1rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Record new symptoms, case counts, or observations directly to the ML tuning model.</p>
+                              
+                              <div style={{ position: 'relative', background: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                <textarea 
+                                  placeholder="e.g. 5 new malaria cases found today, rapid tests positive..." 
+                                  className="form-input" 
+                                  rows={2}
+                                  style={{ 
+                                    width: '100%', 
+                                    padding: '0.75rem', 
+                                    paddingBottom: '2.5rem',
+                                    fontSize: '0.875rem', 
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    resize: 'none',
+                                    background: 'transparent',
+                                    boxShadow: 'none'
+                                  }} 
+                                />
+                                <div style={{ position: 'absolute', bottom: '0.4rem', right: '0.4rem', left: '0.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                    <button className="btn btn-outline" style={{ padding: '0.25rem', border: 'none', color: 'var(--text-muted)' }} title="Attach Photo">
+                                      <Camera size={18} />
+                                    </button>
+                                    <button className="btn btn-outline" style={{ padding: '0.25rem', border: 'none', color: 'var(--text-muted)' }} title="Attach File">
+                                      <FileText size={18} />
+                                    </button>
+                                  </div>
+                                  <button className="btn btn-primary" style={{ padding: '0.35rem 0.75rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.25rem' }} title="Submit Feedback for ML tuning">
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Log</span>
+                                    <Send size={14} />
+                                  </button>
+                                </div>
                               </div>
                             </div>
 
@@ -363,10 +394,12 @@ export default function FieldWorkerDashboard() {
                   <h4 style={{ color: 'var(--emerald)' }}>{submitStatus}</h4>
                 </div>
               ) : (
-                <form onSubmit={submitIncident} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <form onSubmit={submitIncident} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Incident Type</label>
-                    <select className="form-select" value={incidentForm.type} onChange={(e) => setIncidentForm({...incidentForm, type: e.target.value})} required>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '0.5rem' }}>
+                      <AlertCircle size={16} color="var(--text-muted)" /> Incident Type
+                    </label>
+                    <select className="form-select" value={incidentForm.type} onChange={(e) => setIncidentForm({...incidentForm, type: e.target.value})} required style={{ background: 'var(--bg-secondary)', border: '1px solid transparent' }}>
                       <option value="disease_outbreak">Disease Outbreak</option>
                       <option value="injury">Mass Injury</option>
                       <option value="environmental">Environmental / Weather</option>
@@ -374,20 +407,36 @@ export default function FieldWorkerDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Severity</label>
-                    <select className="form-select" value={incidentForm.severity} onChange={(e) => setIncidentForm({...incidentForm, severity: e.target.value})} required>
-                      <option value="critical">Critical</option>
-                      <option value="high">High</option>
-                      <option value="medium">Medium</option>
-                      <option value="low">Low</option>
-                    </select>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '0.5rem' }}>Severity Level</label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      {[
+                        { label: 'Critical', val: 'critical', color: 'var(--rose)' },
+                        { label: 'High', val: 'high', color: 'var(--amber)' },
+                        { label: 'Medium', val: 'medium', color: 'var(--indigo)' },
+                        { label: 'Low', val: 'low', color: 'var(--emerald)' }
+                      ].map((sev) => (
+                        <div 
+                          key={sev.val}
+                          onClick={() => setIncidentForm({...incidentForm, severity: sev.val})}
+                          style={{
+                            flex: 1, textAlign: 'center', padding: '0.6rem 0.25rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
+                            background: incidentForm.severity === sev.val ? sev.color : 'var(--bg-secondary)',
+                            color: incidentForm.severity === sev.val ? '#fff' : 'var(--text-secondary)',
+                            transition: 'all 0.2s',
+                            boxShadow: incidentForm.severity === sev.val ? `0 4px 12px ${sev.color}40` : 'none'
+                          }}
+                        >
+                          {sev.label}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Description</label>
-                    <textarea className="form-input" rows={3} value={incidentForm.description} onChange={(e) => setIncidentForm({...incidentForm, description: e.target.value})} required placeholder="Briefly describe the situation..."></textarea>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '0.5rem' }}>Description</label>
+                    <textarea className="form-input" rows={3} value={incidentForm.description} onChange={(e) => setIncidentForm({...incidentForm, description: e.target.value})} required placeholder="Provide details about the incident, affected individuals, and immediate needs..." style={{ background: 'var(--bg-secondary)', border: '1px solid transparent' }}></textarea>
                   </div>
-                  <button type="submit" disabled={submitting || tasks.length === 0} className="btn btn-primary" style={{ background: 'var(--rose)', border: 'none', marginTop: '0.5rem' }}>
-                    {submitting ? 'Submitting...' : 'Submit Report'}
+                  <button type="submit" disabled={submitting || tasks.length === 0} className="btn btn-primary" style={{ background: 'var(--rose)', border: 'none', marginTop: '0.5rem', padding: '0.875rem', fontSize: '1rem' }}>
+                    {submitting ? 'Submitting...' : 'Submit Incident Report'}
                   </button>
                 </form>
               )}
@@ -414,30 +463,44 @@ export default function FieldWorkerDashboard() {
                   <h4 style={{ color: 'var(--emerald)' }}>{submitStatus}</h4>
                 </div>
               ) : (
-                <form onSubmit={submitMedicine} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <form onSubmit={submitMedicine} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Medicine Name</label>
-                    <input type="text" className="form-input" value={medicineForm.name} onChange={(e) => setMedicineForm({...medicineForm, name: e.target.value})} required placeholder="e.g. Paracetamol, ORS" />
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '0.5rem' }}>Medicine Name</label>
+                    <input type="text" className="form-input" value={medicineForm.name} onChange={(e) => setMedicineForm({...medicineForm, name: e.target.value})} required placeholder="e.g. Paracetamol, ORS" style={{ background: 'var(--bg-secondary)', border: '1px solid transparent' }} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Quantity</label>
-                      <input type="number" min="1" className="form-input" value={medicineForm.quantity} onChange={(e) => setMedicineForm({...medicineForm, quantity: Number(e.target.value)})} required />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Urgency</label>
-                      <select className="form-select" value={medicineForm.urgency} onChange={(e) => setMedicineForm({...medicineForm, urgency: e.target.value})} required>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
-                      </select>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem' }}>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '0.5rem' }}>Quantity</label>
+                        <input type="number" min="1" className="form-input" value={medicineForm.quantity} onChange={(e) => setMedicineForm({...medicineForm, quantity: Number(e.target.value)})} required style={{ background: 'var(--bg-secondary)', border: '1px solid transparent' }} />
+                      </div>
+                      <div style={{ flex: 2 }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '0.5rem' }}>Urgency</label>
+                        <div style={{ display: 'flex', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '8px' }}>
+                          {['low', 'medium', 'high'].map((urg) => (
+                            <div 
+                              key={urg}
+                              onClick={() => setMedicineForm({...medicineForm, urgency: urg})}
+                              style={{
+                                flex: 1, textAlign: 'center', padding: '0.5rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize',
+                                background: medicineForm.urgency === urg ? 'var(--bg-card)' : 'transparent',
+                                color: medicineForm.urgency === urg ? 'var(--emerald)' : 'var(--text-secondary)',
+                                boxShadow: medicineForm.urgency === urg ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              {urg}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Notes (Optional)</label>
-                    <input type="text" className="form-input" value={medicineForm.notes} onChange={(e) => setMedicineForm({...medicineForm, notes: e.target.value})} placeholder="Reason for request" />
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600, marginBottom: '0.5rem' }}>Notes (Optional)</label>
+                    <textarea className="form-input" rows={2} value={medicineForm.notes} onChange={(e) => setMedicineForm({...medicineForm, notes: e.target.value})} placeholder="Reason for request, e.g. Out of stock due to recent flu..." style={{ background: 'var(--bg-secondary)', border: '1px solid transparent' }}></textarea>
                   </div>
-                  <button type="submit" disabled={submitting || tasks.length === 0} className="btn btn-primary" style={{ background: 'var(--emerald)', border: 'none', marginTop: '0.5rem' }}>
+                  <button type="submit" disabled={submitting || tasks.length === 0} className="btn btn-primary" style={{ background: 'var(--emerald)', border: 'none', marginTop: '0.5rem', padding: '0.875rem', fontSize: '1rem' }}>
                     {submitting ? 'Submitting...' : 'Submit Request'}
                   </button>
                 </form>

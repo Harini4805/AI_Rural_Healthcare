@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShieldAlert, TrendingUp, BellRing, GitBranch, Settings, LayoutDashboard, Activity } from 'lucide-react';
+import { ShieldAlert, TrendingUp, BellRing, GitBranch, Settings, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LandingPage() {
