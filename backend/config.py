@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     
     # Database
-    DATABASE_URL: str = "sqlite:///./health_intelligence.db"
+    DATABASE_URL: str = "sqlite:///./health_intelligence_v2.db"
     
     # Security
     SECRET_KEY: str = "your-secret-key-change-in-production"
