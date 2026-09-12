@@ -92,3 +92,40 @@ class PredictivePattern(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+# User model for authentication
+class User(Base):
+    """Application user with credentials"""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(String(50), default="worker", nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Optional relationship to health records can be added later
+
+
+class VillageResource(Base):
+    """
+    Per-village resource metrics used for risk scoring.
+    NOTE: staff_count, staff_required, medicine_stock_pct, and
+    infrastructure_score are ILLUSTRATIVE SAMPLE DATA seeded for the demo
+    — they are not sourced from live field data.
+    """
+    __tablename__ = "village_resources"
+
+    id = Column(Integer, primary_key=True, index=True)
+    village_id = Column(Integer, ForeignKey("villages.id"), nullable=False, unique=True)
+    staff_count = Column(Integer, nullable=False, default=0)
+    staff_required = Column(Integer, nullable=False, default=5)
+    medicine_stock_pct = Column(Float, nullable=False, default=50.0)  # 0-100
+    infrastructure_score = Column(Float, nullable=False, default=50.0)  # 0-100
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    village = relationship("Village", backref="resource")

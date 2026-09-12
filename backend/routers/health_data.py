@@ -6,11 +6,12 @@ import logging
 
 from backend.database import get_db
 from backend.models import District, Village, HealthRecord, PredictivePattern
+from backend.dependencies import get_current_user
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 # Pydantic schemas
@@ -269,3 +270,76 @@ async def delete_health_record(record_id: int, db: Session = Depends(get_db)):
     db.delete(db_record)
     db.commit()
     logger.info(f"Deleted health record: {db_record.id}")
+
+
+# ─── Predictive Patterns ────────────────────────────────────────────────────
+
+class PredictivePatternCreate(BaseModel):
+    disease_type: str = Field(..., min_length=1, max_length=100)
+    pattern_description: str = Field(None)
+    confidence_score: float = Field(None, ge=0.0, le=1.0)
+    data_points_used: int = Field(None, ge=0)
+    active: bool = True
+
+
+class PredictivePatternResponse(BaseModel):
+    id: int
+    disease_type: str
+    pattern_description: str | None
+    confidence_score: float | None
+    data_points_used: int | None
+    active: bool
+    last_updated: datetime
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/patterns", response_model=List[PredictivePatternResponse])
+async def list_patterns(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """List all predictive patterns"""
+    return db.query(PredictivePattern).offset(skip).limit(limit).all()
+
+
+@router.get("/patterns/{pattern_id}", response_model=PredictivePatternResponse)
+async def get_pattern(pattern_id: int, db: Session = Depends(get_db)):
+    """Get a specific predictive pattern"""
+    pattern = db.query(PredictivePattern).filter(PredictivePattern.id == pattern_id).first()
+    if not pattern:
+        raise HTTPException(status_code=404, detail="Pattern not found")
+    return pattern
+
+
+@router.post("/patterns", response_model=PredictivePatternResponse, status_code=status.HTTP_201_CREATED)
+async def create_pattern(pattern: PredictivePatternCreate, db: Session = Depends(get_db)):
+    """Create a new predictive pattern"""
+    db_pattern = PredictivePattern(**pattern.model_dump())
+    db.add(db_pattern)
+    db.commit()
+    db.refresh(db_pattern)
+    return db_pattern
+
+
+@router.put("/patterns/{pattern_id}", response_model=PredictivePatternResponse)
+async def update_pattern(pattern_id: int, pattern: PredictivePatternCreate, db: Session = Depends(get_db)):
+    """Update a predictive pattern"""
+    db_pattern = db.query(PredictivePattern).filter(PredictivePattern.id == pattern_id).first()
+    if not db_pattern:
+        raise HTTPException(status_code=404, detail="Pattern not found")
+    for key, value in pattern.model_dump().items():
+        setattr(db_pattern, key, value)
+    db_pattern.last_updated = datetime.utcnow()
+    db.commit()
+    db.refresh(db_pattern)
+    return db_pattern
+
+
+@router.delete("/patterns/{pattern_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_pattern(pattern_id: int, db: Session = Depends(get_db)):
+    """Delete a predictive pattern"""
+    db_pattern = db.query(PredictivePattern).filter(PredictivePattern.id == pattern_id).first()
+    if not db_pattern:
+        raise HTTPException(status_code=404, detail="Pattern not found")
+    db.delete(db_pattern)
+    db.commit()
+

@@ -1,0 +1,127 @@
+import { useEffect, useState } from 'react';
+import Layout from '../Layout';
+import api from '../../services/api';
+import RiskMap from './RiskMap';
+import RiskTable from './RiskTable';
+import VillageDetail from './VillageDetail';
+import DistrictAnalytics from './DistrictAnalytics';
+
+export interface District {
+  id: number;
+  name: string;
+}
+
+export interface VillageRisk {
+  village_id: number;
+  village_name: string;
+  latitude: number | null;
+  longitude: number | null;
+  population: number;
+  composite_score: number;
+  dominant_driver: string;
+  recommendation: string;
+  rank: number;
+  factors: {
+    disease_load: number;
+    staff_vacancy: number;
+    medicine_gap: number;
+    trend: number;
+  };
+  staff_count: number | null;
+  staff_required: number | null;
+  medicine_stock_pct: number | null;
+  infrastructure_score: number | null;
+}
+
+export interface RankingResponse {
+  district_id: number;
+  district_name: string;
+  villages: VillageRisk[];
+  note: string;
+}
+
+export default function RiskDashboard() {
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<number | null>(null);
+  const [ranking, setRanking] = useState<RankingResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedVillageId, setSelectedVillageId] = useState<number | null>(null);
+
+  useEffect(() => {
+    api.get<District[]>('/districts?limit=100').then((res) => {
+      setDistricts(res.data);
+      if (res.data.length > 0) {
+        setSelectedDistrictId(res.data[0].id);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!selectedDistrictId) {
+      setRanking(null);
+      return;
+    }
+    setLoading(true);
+    setSelectedVillageId(null);
+    api
+      .get<RankingResponse>(`/districts/${selectedDistrictId}/ranking`)
+      .then((res) => setRanking(res.data))
+      .catch((err) => console.error('Failed to load ranking', err))
+      .finally(() => setLoading(false));
+  }, [selectedDistrictId]);
+
+  const activeVillage = ranking?.villages.find((v) => v.village_id === selectedVillageId);
+
+  return (
+    <Layout title="Risk Analysis Dashboard">
+      <div className="flex-between">
+        <div>
+          <label htmlFor="district-select" style={{ marginRight: '1rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
+            Select District:
+          </label>
+          <select
+            id="district-select"
+            className="form-select"
+            style={{ width: 'auto', display: 'inline-block' }}
+            value={selectedDistrictId || ''}
+            onChange={(e) => setSelectedDistrictId(Number(e.target.value))}
+          >
+            {districts.map((d) => (
+               <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+        </div>
+        {ranking?.note && (
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            * {ranking.note}
+          </span>
+        )}
+      </div>
+
+      {loading && <div className="spinner" />}
+      
+      {!loading && ranking && (
+        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+          {/* Left Column: Map & Table */}
+          <div style={{ flex: '1 1 50%', minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="glass" style={{ padding: '1rem', height: '400px' }}>
+               <RiskMap villages={ranking.villages} selectedId={selectedVillageId} onSelect={setSelectedVillageId} />
+            </div>
+            <div className="glass" style={{ padding: '1rem' }}>
+               <RiskTable villages={ranking.villages} selectedId={selectedVillageId} onSelect={setSelectedVillageId} />
+            </div>
+          </div>
+
+          {/* Right Column: Detail Panel or Analytics */}
+          <div style={{ flex: '1 1 40%', minWidth: '350px' }}>
+            {activeVillage ? (
+              <VillageDetail village={activeVillage} onClose={() => setSelectedVillageId(null)} />
+            ) : (
+              <DistrictAnalytics ranking={ranking} />
+            )}
+          </div>
+        </div>
+      )}
+    </Layout>
+  );
+}
