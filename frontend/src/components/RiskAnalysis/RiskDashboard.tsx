@@ -87,7 +87,7 @@ export default function RiskDashboard() {
   const activeVillage = ranking?.villages.find((v) => v.village_id === selectedVillageId);
 
   return (
-    <Layout title="Risk Analysis Dashboard">
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* ML Anomaly Banner (Model C) */}
       {showBanner && anomalies.length > 0 && (
         <div style={{ background: 'var(--rose)', color: 'white', padding: '0.75rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(244, 63, 94, 0.2)' }}>
@@ -169,6 +169,6 @@ export default function RiskDashboard() {
           </div>
         </div>
       )}
-    </Layout>
+    </div>
   );
 }

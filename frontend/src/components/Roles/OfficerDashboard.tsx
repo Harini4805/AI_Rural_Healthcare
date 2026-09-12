@@ -5,8 +5,8 @@ import RiskMap from '../RiskAnalysis/RiskMap';
 import RiskTable from '../RiskAnalysis/RiskTable';
 import VillageDetail from '../RiskAnalysis/VillageDetail';
 import type { RankingResponse } from '../RiskAnalysis/RiskDashboard';
-import { RadialBarChart, RadialBar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Users, PackageSearch, ShieldAlert } from 'lucide-react';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
+import { Home, ShieldAlert, Users, Activity } from 'lucide-react';
 
 export default function OfficerDashboard() {
   const [ranking, setRanking] = useState<RankingResponse | null>(null);
@@ -25,32 +25,34 @@ export default function OfficerDashboard() {
 
   const activeVillage = ranking?.villages.find((v) => v.village_id === selectedVillageId);
 
-  // Mock data for Resource Utilization Area Chart
-  const resourceData = [
-    { day: 'Mon', medicine: 80, staff: 90 },
-    { day: 'Tue', medicine: 75, staff: 85 },
-    { day: 'Wed', medicine: 65, staff: 85 },
-    { day: 'Thu', medicine: 70, staff: 95 },
-    { day: 'Fri', medicine: 60, staff: 80 },
-    { day: 'Sat', medicine: 50, staff: 70 },
-    { day: 'Sun', medicine: 45, staff: 65 },
-  ];
-
-  // Derive Risk Distribution for Radial Chart
+  // Derive metrics
+  const totalVillages = ranking?.villages.length || 0;
   let criticalCount = 0, highCount = 0, medCount = 0, lowCount = 0;
+  let totalScore = 0;
+  
   ranking?.villages.forEach(v => {
+    totalScore += v.composite_score;
     if (v.composite_score > 75) criticalCount++;
     else if (v.composite_score > 50) highCount++;
     else if (v.composite_score > 25) medCount++;
     else lowCount++;
   });
+  
+  const avgScore = totalVillages ? Math.round(totalScore / totalVillages) : 0;
 
-  const radialData = [
-    { name: 'Low Risk', value: lowCount, fill: '#10b981' },
-    { name: 'Medium Risk', value: medCount, fill: '#3b82f6' },
-    { name: 'High Risk', value: highCount, fill: '#f59e0b' },
+  // Bar Chart Data (Top 8 villages by score)
+  const barData = ranking?.villages.slice(0, 8).map(v => ({
+    name: v.village_name.length > 10 ? v.village_name.substring(0, 10) + '...' : v.village_name,
+    score: Math.round(v.composite_score)
+  })) || [];
+
+  // Donut Chart Data
+  const donutData = [
     { name: 'Critical Risk', value: criticalCount, fill: '#f43f5e' },
-  ];
+    { name: 'High Risk', value: highCount, fill: '#f59e0b' },
+    { name: 'Medium Risk', value: medCount, fill: '#3b82f6' },
+    { name: 'Low Risk', value: lowCount, fill: '#10b981' },
+  ].filter(d => d.value > 0);
 
   return (
     <Layout title={`District Officer View: ${ranking?.district_name || 'Loading...'}`}>
@@ -59,97 +61,155 @@ export default function OfficerDashboard() {
       {!loading && ranking && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
-          {/* Top KPI Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
-            <div className="glass" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ background: 'rgba(244, 63, 94, 0.1)', padding: '1rem', borderRadius: '50%' }}>
-                <ShieldAlert size={24} color="var(--rose)" />
+          {/* Top KPI Row (4 Cards) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+            {/* Card 1 */}
+            <div className="glass" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem', borderRadius: '12px' }}>
+              <div style={{ background: '#d1fae5', color: '#059669', padding: '1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Home size={28} />
               </div>
-              <div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{criticalCount}</div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Active Outbreaks</div>
-              </div>
-            </div>
-            
-            <div className="glass" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1rem', borderRadius: '50%' }}>
-                <PackageSearch size={24} color="var(--indigo)" />
-              </div>
-              <div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>72%</div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Resource Utilization</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>TOTAL VILLAGES</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{totalVillages}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>monitored locations</div>
               </div>
             </div>
             
-            <div className="glass" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1rem', borderRadius: '50%' }}>
-                <Users size={24} color="var(--emerald)" />
+            {/* Card 2 */}
+            <div className="glass" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem', borderRadius: '12px' }}>
+              <div style={{ background: '#dbeafe', color: '#2563eb', padding: '1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ShieldAlert size={28} />
               </div>
-              <div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>18/24</div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Field Workers Active</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>CRITICAL RISKS</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{criticalCount}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>require attention</div>
+              </div>
+            </div>
+            
+            {/* Card 3 */}
+            <div className="glass" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem', borderRadius: '12px' }}>
+              <div style={{ background: '#fef3c7', color: '#d97706', padding: '1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Users size={28} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>ACTIVE WORKERS</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>18</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>deployed in field</div>
+              </div>
+            </div>
+
+            {/* Card 4 */}
+            <div className="glass" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem', borderRadius: '12px' }}>
+              <div style={{ background: '#ffe4e6', color: '#e11d48', padding: '1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Activity size={28} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>AVG RISK SCORE</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{avgScore}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>out of 100</div>
               </div>
             </div>
           </div>
 
-          {/* Attractive Charts Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
-            <div className="glass" style={{ padding: '1.5rem', height: '300px', display: 'flex', flexDirection: 'column' }}>
-              <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--text-secondary)' }}>Village Risk Distribution</h3>
-              <div style={{ flex: 1 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadialBarChart cx="50%" cy="50%" innerRadius="20%" outerRadius="100%" barSize={15} data={radialData}>
-                    <RadialBar label={{ position: 'insideStart', fill: '#fff' }} background dataKey="value" />
-                    <Tooltip contentStyle={{ background: 'var(--bg-card)', border: 'none', borderRadius: '8px' }} />
-                  </RadialBarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+          {/* Charts Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
             
-            <div className="glass" style={{ padding: '1.5rem', height: '300px', display: 'flex', flexDirection: 'column' }}>
-              <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--text-secondary)' }}>Resource Availability Trend</h3>
+            {/* Left Chart: Bar Chart */}
+            <div className="glass" style={{ padding: '1.5rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', minHeight: '380px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: 600 }}>Risk Score by Village</h3>
+                <select className="form-select" style={{ width: 'auto', padding: '0.35rem 2rem 0.35rem 0.75rem', fontSize: '0.85rem' }}>
+                  <option>Top 8 Highest</option>
+                  <option>All Villages</option>
+                </select>
+              </div>
               <div style={{ flex: 1 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={resourceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorMed" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--cyan)" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="var(--cyan)" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorStaff" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--indigo)" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="var(--indigo)" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
+                  <BarChart data={barData} margin={{ top: 20, right: 10, left: -20, bottom: 40 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                    <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
-                    <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
-                    <Tooltip contentStyle={{ background: 'var(--bg-card)', border: 'none', borderRadius: '8px' }} />
-                    <Area type="monotone" dataKey="medicine" stroke="var(--cyan)" fillOpacity={1} fill="url(#colorMed)" name="Medicine %" />
-                    <Area type="monotone" dataKey="staff" stroke="var(--indigo)" fillOpacity={1} fill="url(#colorStaff)" name="Staffing %" />
-                  </AreaChart>
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} 
+                      axisLine={false} 
+                      tickLine={false} 
+                      angle={-45}
+                      textAnchor="end"
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} 
+                      axisLine={false} 
+                      tickLine={false} 
+                      domain={[0, 100]}
+                      tickFormatter={(val) => `${val}`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ background: '#333', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '0.85rem' }} 
+                      itemStyle={{ color: '#fff' }}
+                      cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                    />
+                    <Bar dataKey="score" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            
+            {/* Right Chart: Donut Chart with Legend */}
+            <div className="glass" style={{ padding: '1.5rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', minHeight: '380px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: 600 }}>Risk Distribution Overview</h3>
+                <select className="form-select" style={{ width: 'auto', padding: '0.35rem 2rem 0.35rem 0.75rem', fontSize: '0.85rem' }}>
+                  <option>2026</option>
+                  <option>2025</option>
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie 
+                      data={donutData} 
+                      cx="40%" 
+                      cy="50%" 
+                      innerRadius="50%" 
+                      outerRadius="80%" 
+                      paddingAngle={2}
+                      dataKey="value" 
+                      stroke="none"
+                    >
+                      {donutData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: '#333', color: '#fff', border: 'none', borderRadius: '4px' }} itemStyle={{ color: '#fff' }} />
+                    <Legend 
+                      layout="vertical" 
+                      verticalAlign="middle" 
+                      align="right"
+                      wrapperStyle={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}
+                      iconType="square"
+                    />
+                  </PieChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-            {/* Left Column: Map & Table */}
+          {/* Lower section: Map and Table */}
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
             <div style={{ flex: '1 1 50%', minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div className="glass" style={{ padding: '1rem', height: '400px' }}>
+              <div className="glass" style={{ padding: '1rem', height: '400px', borderRadius: '12px' }}>
                  <RiskMap villages={ranking.villages} selectedId={selectedVillageId} onSelect={setSelectedVillageId} />
               </div>
-              <div className="glass" style={{ padding: '1rem' }}>
+              <div className="glass" style={{ padding: '1rem', borderRadius: '12px' }}>
                  <RiskTable villages={ranking.villages} selectedId={selectedVillageId} onSelect={setSelectedVillageId} />
               </div>
             </div>
 
-            {/* Right Column: Detail Panel */}
             <div style={{ flex: '1 1 40%', minWidth: '350px' }}>
               {activeVillage ? (
                 <VillageDetail village={activeVillage} onClose={() => setSelectedVillageId(null)} />
               ) : (
-                <div className="glass" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <div className="glass" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', borderRadius: '12px' }}>
                   <h3>Select a village</h3>
                   <p>Click on a village in the map or table to view detailed risk analysis and run what-if simulations.</p>
                 </div>

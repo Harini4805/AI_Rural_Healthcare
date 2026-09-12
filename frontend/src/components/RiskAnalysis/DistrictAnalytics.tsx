@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { RankingResponse } from './RiskDashboard';
 
 interface DistrictAnalyticsProps {
@@ -9,61 +9,107 @@ export default function DistrictAnalytics({ ranking }: DistrictAnalyticsProps) {
   
   // Format data for charts
   const staffData = ranking.villages.map(v => ({
-    name: v.village_name,
+    name: v.village_name.length > 10 ? v.village_name.substring(0, 10) + '...' : v.village_name,
     Current: v.staff_count || 0,
     Required: v.staff_required || 0,
   }));
 
   const medData = ranking.villages.map(v => ({
-    name: v.village_name,
+    name: v.village_name.length > 10 ? v.village_name.substring(0, 10) + '...' : v.village_name,
     Stock: v.medicine_stock_pct || 0,
   }));
 
   return (
-    <div className="glass" style={{ padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
+      
+      {/* Header Card */}
+      <div className="glass" style={{ padding: '1.5rem', borderRadius: '12px' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
           {ranking.district_name} Analytics
         </h2>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
           District-wide resource allocation overview
         </p>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      {/* Charts */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         
         {/* Staffing Chart */}
-        <div style={{ flex: 1, minHeight: '220px' }}>
-          <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+        <div className="glass" style={{ flex: 1, padding: '1.5rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', minHeight: '280px' }}>
+          <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem', margin: 0 }}>
             Staffing: Current vs Required
           </h4>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={staffData} margin={{ top: 5, right: 0, left: -20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
-              <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
-              <Tooltip cursor={{ fill: 'rgba(0,0,0,0.02)' }} />
-              <Legend wrapperStyle={{ fontSize: '10px' }} />
-              <Bar dataKey="Current" fill="var(--indigo)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Required" fill="var(--border)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div style={{ flex: 1 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={staffData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 10, fill: 'var(--text-muted)' }} 
+                  axisLine={false} 
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={{ fontSize: 10, fill: 'var(--text-muted)' }} 
+                  axisLine={false} 
+                  tickLine={false}
+                />
+                <Tooltip 
+                  contentStyle={{ background: '#333', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.85rem' }} 
+                  itemStyle={{ color: '#fff' }}
+                  cursor={{ fill: 'rgba(0,0,0,0.04)' }} 
+                />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} iconType="circle" />
+                <Bar dataKey="Current" fill="var(--indigo)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="Required" fill="var(--text-muted)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Medicine Stock Chart */}
-        <div style={{ flex: 1, minHeight: '220px' }}>
-          <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+        <div className="glass" style={{ flex: 1, padding: '1.5rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', minHeight: '280px' }}>
+          <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem', margin: 0 }}>
             Medicine Stock Availability (%)
           </h4>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={medData} margin={{ top: 5, right: 0, left: -20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} />
-              <Tooltip cursor={{ fill: 'rgba(0,0,0,0.02)' }} />
-              <Bar dataKey="Stock" fill="var(--emerald)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div style={{ flex: 1 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={medData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorStock" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--emerald)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--emerald)" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 10, fill: 'var(--text-muted)' }} 
+                  axisLine={false} 
+                  tickLine={false}
+                />
+                <YAxis 
+                  domain={[0, 100]} 
+                  tick={{ fontSize: 10, fill: 'var(--text-muted)' }} 
+                  axisLine={false} 
+                  tickLine={false}
+                />
+                <Tooltip 
+                  contentStyle={{ background: '#333', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.85rem' }} 
+                  itemStyle={{ color: '#fff' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="Stock" 
+                  stroke="var(--emerald)" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#colorStock)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
       </div>
