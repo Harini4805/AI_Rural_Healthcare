@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from backend.routers import health_data, auth, risk
+from backend.routers import health_data, auth, risk, ml
 from backend.config import settings
 from backend.database import engine, SessionLocal, init_db
 from backend.models import Base, User
@@ -65,6 +65,8 @@ app = FastAPI(
 allowed_origins = list(settings.ALLOWED_ORIGINS) + [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
 ]
 
 app.add_middleware(
@@ -79,7 +81,7 @@ app.add_middleware(
 app.include_router(auth.router,        prefix="/api/v1", tags=["auth"])
 app.include_router(health_data.router, prefix="/api/v1", tags=["health-data"])
 app.include_router(risk.router,        prefix="/api/v1", tags=["risk"])
-
+app.include_router(ml.router,          prefix="/api/v1/ml", tags=["ml"])
 
 @app.get("/")
 async def root():
@@ -90,12 +92,10 @@ async def root():
         "status": "operational"
     }
 
-
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
-
 
 if __name__ == "__main__":
     import uvicorn

@@ -5,6 +5,8 @@ import RiskMap from './RiskMap';
 import RiskTable from './RiskTable';
 import VillageDetail from './VillageDetail';
 import DistrictAnalytics from './DistrictAnalytics';
+import AllocationPlanner from './AllocationPlanner';
+import { AlertCircle, X } from 'lucide-react';
 
 export interface District {
   id: number;
@@ -46,6 +48,11 @@ export default function RiskDashboard() {
   const [ranking, setRanking] = useState<RankingResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedVillageId, setSelectedVillageId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'analytics' | 'planner'>('analytics');
+  
+  // ML Anomaly Banner State
+  const [anomalies, setAnomalies] = useState<any[]>([]);
+  const [showBanner, setShowBanner] = useState(true);
 
   useEffect(() => {
     api.get<District[]>('/districts?limit=100').then((res) => {
@@ -54,6 +61,13 @@ export default function RiskDashboard() {
         setSelectedDistrictId(res.data[0].id);
       }
     });
+    
+    // Fetch ML anomalies
+    api.get('/ml/anomalies').then(res => {
+      if (res.data.anomalies) {
+        setAnomalies(res.data.anomalies);
+      }
+    }).catch(err => console.error(err));
   }, []);
 
   useEffect(() => {
@@ -74,6 +88,24 @@ export default function RiskDashboard() {
 
   return (
     <Layout title="Risk Analysis Dashboard">
+      {/* ML Anomaly Banner (Model C) */}
+      {showBanner && anomalies.length > 0 && (
+        <div style={{ background: 'var(--rose)', color: 'white', padding: '0.75rem 1rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', boxShadow: '0 4px 12px rgba(244, 63, 94, 0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <AlertCircle size={20} />
+            <div>
+              <strong style={{ display: 'block', fontSize: '0.9rem' }}>Outbreak Anomaly Detected (Model C)</strong>
+              <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>
+                {anomalies.map(a => `Village #${a.village_id} (${a.disease_type}): ${a.message}`).join(' | ')}
+              </span>
+            </div>
+          </div>
+          <button onClick={() => setShowBanner(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '0.25rem' }}>
+            <X size={18} />
+          </button>
+        </div>
+      )}
+
       <div className="flex-between">
         <div>
           <label htmlFor="district-select" style={{ marginRight: '1rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
@@ -91,17 +123,30 @@ export default function RiskDashboard() {
             ))}
           </select>
         </div>
-        {ranking?.note && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            * {ranking.note}
-          </span>
-        )}
+        
+        {/* Tab Toggle for Right Panel */}
+        <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.25rem', borderRadius: '8px' }}>
+          <button 
+            className={`btn ${activeTab === 'analytics' ? 'btn-primary' : ''}`}
+            style={{ padding: '0.5rem 1rem', background: activeTab === 'analytics' ? 'var(--indigo)' : 'transparent' }}
+            onClick={() => setActiveTab('analytics')}
+          >
+            Analytics
+          </button>
+          <button 
+            className={`btn ${activeTab === 'planner' ? 'btn-primary' : ''}`}
+            style={{ padding: '0.5rem 1rem', background: activeTab === 'planner' ? 'var(--indigo)' : 'transparent' }}
+            onClick={() => setActiveTab('planner')}
+          >
+            Allocation Planner
+          </button>
+        </div>
       </div>
 
-      {loading && <div className="spinner" />}
+      {loading && <div className="spinner" style={{ marginTop: '2rem' }} />}
       
       {!loading && ranking && (
-        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginTop: '1.5rem' }}>
           {/* Left Column: Map & Table */}
           <div style={{ flex: '1 1 50%', minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div className="glass" style={{ padding: '1rem', height: '400px' }}>
@@ -112,12 +157,14 @@ export default function RiskDashboard() {
             </div>
           </div>
 
-          {/* Right Column: Detail Panel or Analytics */}
+          {/* Right Column: Detail Panel, Analytics, or Planner */}
           <div style={{ flex: '1 1 40%', minWidth: '350px' }}>
             {activeVillage ? (
               <VillageDetail village={activeVillage} onClose={() => setSelectedVillageId(null)} />
             ) : (
-              <DistrictAnalytics ranking={ranking} />
+              activeTab === 'analytics' 
+                ? <DistrictAnalytics ranking={ranking} />
+                : <AllocationPlanner districtId={selectedDistrictId!} />
             )}
           </div>
         </div>

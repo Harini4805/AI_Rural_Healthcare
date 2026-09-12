@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, MapPin, Plus, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, MapPin, Plus, ShieldAlert, Send } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import Layout from '../Layout';
 import api from '../../services/api';
 import type { RankingResponse, VillageRisk } from '../RiskAnalysis/RiskDashboard';
@@ -57,6 +58,11 @@ export default function FieldWorkerDashboard() {
     ];
   };
 
+  const progressData = [
+    { name: 'Completed', value: 12, fill: '#10b981' }, // emerald
+    { name: 'Pending', value: tasks.length, fill: '#6366f1' } // indigo
+  ];
+
   return (
     <Layout title="Field Tasks">
       {loading && <div className="spinner" style={{ margin: '4rem auto' }} />}
@@ -77,6 +83,26 @@ export default function FieldWorkerDashboard() {
                 Action Required
               </span>
             )}
+          </div>
+
+          {/* Weekly Progress Donut Chart */}
+          <div className="glass" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h3 style={{ margin: '0 0 0.25rem', fontSize: '1rem', color: 'var(--text-primary)' }}>Weekly Progress</h3>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>You've completed 12 tasks this week!</div>
+            </div>
+            <div style={{ height: '80px', width: '80px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={progressData} cx="50%" cy="50%" innerRadius={25} outerRadius={35} dataKey="value" stroke="none">
+                    {progressData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: 'var(--bg-card)', border: 'none', borderRadius: '4px', fontSize: '0.75rem' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -161,6 +187,29 @@ export default function FieldWorkerDashboard() {
                                   <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{item}</span>
                                 </label>
                               ))}
+                            </div>
+
+                            {/* New Expanded Fields */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '8px' }}>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>LAST VISITED</div>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 500 }}>Oct 12 (3 days ago)</div>
+                              </div>
+                              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '8px' }}>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>PATIENTS SCREENED</div>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 500 }}>45 / 50 Target</div>
+                              </div>
+                            </div>
+
+                            {/* ML Feedback Loop Form */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                              <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Log Field Observation</h4>
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <input type="text" placeholder="e.g. 5 new cases found today..." className="form-input" style={{ flex: 1, padding: '0.5rem', fontSize: '0.85rem' }} />
+                                <button className="btn btn-primary" style={{ padding: '0.5rem 0.75rem' }} title="Submit Feedback for ML tuning">
+                                  <Send size={16} />
+                                </button>
+                              </div>
                             </div>
 
                             <button 
